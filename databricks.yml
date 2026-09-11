@@ -1,0 +1,48 @@
+bundle:
+  name: fcc-robocalls
+
+resources:
+  pipelines:
+    robocalls:
+      name: fcc-robocalls-${bundle.target}
+      catalog: ${var.catalog}
+      schema: default
+      serverless: true
+      libraries:
+        - file:
+            path: ./robocalls/pipeline/01_bronze.sql
+        - file:
+            path: ./robocalls/pipeline/02_silver.sql
+        - file:
+            path: ./robocalls/pipeline/03_gold.sql
+      configuration:
+        dataset_path: /Volumes/${var.catalog}/source_data/fcc_raw/
+
+  jobs:
+    robocalls_daily:
+      name: fcc-robocalls-daily-${bundle.target}
+      tasks:
+        - task_key: land_source
+          notebook_task:
+            notebook_path: ./robocalls/landing/01_land_source.ipynb
+            base_parameters:
+              mode: incremental
+        - task_key: run_pipeline
+          depends_on:
+            - task_key: land_source
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.robocalls.id}
+
+variables:
+  catalog:
+    description: Target Unity Catalog catalog
+    default: robocall_dev
+
+targets:
+  dev:
+    mode: development
+    default: true
+  prod:
+    mode: production
+    variables:
+      catalog: robocall

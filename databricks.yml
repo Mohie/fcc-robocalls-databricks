@@ -37,12 +37,19 @@ variables:
   catalog:
     description: Target Unity Catalog catalog
     default: robocall_dev
+  workspace_host:
+    description: Databricks workspace URL for the target
+    type: string
 
 targets:
   dev:
     mode: development
     default: true
+    workspace:
+      host: ${var.workspace_host}
   prod:
     mode: production
+    workspace:
+      host: ${var.workspace_host}
     variables:
       catalog: robocall
